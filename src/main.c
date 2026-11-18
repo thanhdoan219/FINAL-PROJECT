@@ -42,29 +42,45 @@ void displayReadings(double readings[], int count) {
 
 int main(int argc, char* argv[]) {
     double readings[READING_COUNT];
-    int i = 0, inRange = 0;
+    int i = 0, inRange;
     char check;
+    gpioInitialise();
+    gpioSetMode(PIN,PI_OUTPUT);
+    gpioWrite(PIN, 0);
     //float temperature;
     
     do
     {
+        inRange = 0;
         printf("Temperature: ");
         scanf("%lf", &readings[i]);
         if (readings[i] > MAX || readings[i] < MIN)
             inRange = 1;
+        if(inRange == 1)
+        {
+            printf("Dangerous\n");
+            gpioWrite(PIN,1);// LED ON
+            getchar(); // waits for Enter key
+        }
+        else
+        {
+            printf("Safe\n");
+            gpioWrite(PIN, 0);// LED OFF
+            getchar(); // waits for Enter key
+        }
         printf("Do you want to add another temperature?(Y/N)");
         scanf(" %c", &check);
         check = toupper(check);
         if (check == 'Y' || i < READING_COUNT)
             i++;
+        else if (i == 0)
+            i = 1;
     } while (check == 'Y' && i < READING_COUNT);
 
     displayReadings(readings, i);
 
-    gpioInitialise();
-    gpioSetMode(PIN,PI_OUTPUT);
 
-    if(inRange == 1)
+    /*if(inRange == 1)
     {
         printf("Dangerous\n");
         gpioWrite(PIN,1);// LED ON
@@ -73,7 +89,9 @@ int main(int argc, char* argv[]) {
     else
     {
         printf("Safe\n");
-    }
+        gpioWrite(PIN, 0);// LED OFF
+        getchar(); // waits for Enter key
+    }*/
 
     printf("\nAverage temperature: %.1f F\n",
            calculateAverage(readings, i+1));
